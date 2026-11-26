@@ -1,0 +1,136 @@
+openapi: 3.0.3
+info:
+  title: Test Agent API
+  version: 1.0.0
+  description: HTTP interface exposed by the test agent.
+
+servers:
+  - url: /
+
+paths:
+  /:
+    get:
+      summary: Get service status
+      operationId: getStatus
+      responses:
+        '200':
+          description: Service status
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - service
+                  - status
+                properties:
+                  service:
+                    type: string
+                  status:
+                    type: string
+
+  /ls:
+    get:
+      summary: List files
+      operationId: listFiles
+      responses:
+        '200':
+          description: Sorted file paths
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+
+  /up/{filename}:
+    post:
+      summary: Upload a file
+      operationId: uploadFile
+      parameters:
+        - name: filename
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+      responses:
+        '200':
+          description: File upload result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  saved:
+                    type: string
+                  size:
+                    type: integer
+        '400':
+          description: Invalid request
+
+  /dl/{filename}:
+    get:
+      summary: Download a file
+      operationId: downloadFile
+      parameters:
+        - name: filename
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: File contents
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '404':
+          description: File not found
+
+  /run:
+    post:
+      summary: Run a command
+      operationId: runCommand
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - command
+              properties:
+                command:
+                  type: string
+                timeout:
+                  type: integer
+                  default: 30
+                  minimum: 1
+      responses:
+        '200':
+          description: Command result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  exit_code:
+                    type: integer
+                  stdout:
+                    type: string
+                  stderr:
+                    type: string
+        '400':
+          description: Command missing or invalid request
+        '408':
+          description: Command timed out
+        '500':
+          description: Command execution error
